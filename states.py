@@ -1,5 +1,6 @@
 dialog_state = {}
 
+
 def get_current_state(user_id):
     try:
         return dialog_state[user_id]
