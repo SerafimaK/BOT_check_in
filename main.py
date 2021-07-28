@@ -8,7 +8,8 @@ bot = telebot.TeleBot(config.token)
 @bot.message_handler(commands=['start'])
 def start_command(message):
     bot.send_message(message.chat.id, "Доброе утро! С радостью отвечу на любые ваши вопросы. Но для начала напишите "
-                                      "ваш номер телефона или email. ")
+                                      "ваш номер телефона. Если хотите использовать номер из Telegram - нажмите на "
+                                      "кнопку.")
 
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Start')
@@ -18,22 +19,21 @@ def first_question(message):
     if re.search(phone, message.text):
         client_phone = re.search(phone, message.text)
         client_phone = re.sub("\D", "", client_phone.group())
-        reply = "Ваш номер телефона: " + client_phone + ", верно?"
-        states.set_state(message.chat.id, 'SentPhone')
-    elif re.search(email, message.text):
-        client_email = re.search(email, message.text)
-        reply = "Ваш email: " + client_email + ", верно?"
-        states.set_state(message.chat.id, 'SentEmail')
+        # проверка на наличие аккаунта, привязанного к номеру телефона
+        # если есть (подтягиваем данные):
+        reply = "На этот номер уже зарегистрирован аккаунт. Иванов Иван Иванович, это вы?"
+        states.set_state(message.chat.id, 'HasAccount')
+        # если нет:
+        # reply = "У вас еще нет аккаунта. Но мы быстро это исправим! Пожалуйста, напишите ваши ФИО"
+        # states.set_state(message.chat.id, 'NewAccount')
     else:
         reply = "Я не понимаю. Пожалуйста, напишите ваш номер телефона."
     bot.send_message(message.from_user.id, reply)
 
 
-# тут можно добавить проверку на наличие аккаунта
-# предположим, он есть и мы взяли из него ФИО
-@bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'SentPhone')
+@bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'HasAccount')
 def has_account(message):
-    reply = "Вижу, что у вас уже есть аккаунт! Иванов Иван Иванович, это вы?"
+    reply = "На указанный номер придет код.  Пришлите его в чат, чтобы мы убедились, что это действительно вы."
     bot.send_message(message.from_user.id, reply)
 
 
