@@ -1,6 +1,5 @@
 import telebot
 import re
-from pymystem3 import Mystem
 import config
 import states
 import user
@@ -18,10 +17,10 @@ def start_command(message):
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Start')
 def first_question(message):
-    phone = re.compile('((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}')
+    phone = r'((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}'
     if re.search(phone, message.text):
-        user_phone = re.search(phone, message.text)
-        user_phone = re.sub("\D", "", user_phone.group())
+        user_phone = re.search(phone, message.text).group()
+        # user_phone = re.sub("\D", "", user_phone)
         user.add_info(phone, user_phone)
         # проверка на наличие аккаунта, привязанного к номеру телефона
         # если есть (подтягиваем данные):
@@ -57,33 +56,35 @@ def verify_account(message):
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'NewAccount')
 def new_account(message):
-    reply = "У вас еще нет аккаунта. Но мы быстро это исправим! Пожалуйста, напишите ваши ФИО"
-    states.set_state(message.chat.id, 'Name')
-    bot.send_message(message.from_user.id, reply)
-
-
-@bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Name')
-def get_age(message):
-    if not user.full_name(message.text):
-        reply = "Напишите полностью ваши фамилию, имя и отчество (при наличии)."
-    else:
+    if user.full_name(message.text):
         reply = "Укажите дату вашего рождения в формате ДД.ММ.ГГГГ"
         states.set_state(message.chat.id, 'Age')
+    else:
+        reply = "Напишите полностью ваши фамилию, имя и отчество (при наличии)."
     bot.send_message(message.from_user.id, reply)
 
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Age')
 def get_email(message):
-    reply = "Пожалуйста, укажите ваш email."
-    states.set_state(message.chat.id, 'Email')
+    date = r'(3[01]|[12][0-9]|0?[1-9])\.(1[012]|0?[1-9])\.((?:19|20)\d{2})'
+    if re.search(date, message.text):
+        # if user.old_enough()
+        reply = "Пожалуйста, укажите ваш email."
+        states.set_state(message.chat.id, 'Email')
+    else:
+        reply = "Напишите дату вашего рождения. Например: 12.01.1990"
     bot.send_message(message.from_user.id, reply)
 
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Email')
 def check_data(message):
-    email = re.compile('[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}')
-    reply = "Остался последний шаг! Подтвердите, пожалуйста, ваши данные."
-    states.set_state(message.chat.id, 'Check')
+    email = r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}'
+    if re.search(email, message.text):
+        reply = "Остался последний шаг! Подтвердите, пожалуйста, ваши данные."
+        # тут должен быть вывод всех сохраненных данных и кнопки
+        states.set_state(message.chat.id, 'Check')
+    else:
+        reply = "Напишите адрес вашей электронной почты."
     bot.send_message(message.from_user.id, reply)
 
 

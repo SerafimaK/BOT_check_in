@@ -1,3 +1,5 @@
+from pymystem3 import Mystem
+
 data = {}
 
 
@@ -21,7 +23,7 @@ def full_name(text):
                 name['LastName'] = analysis['lex'].title()
             elif gr[1] == 'отч':
                 name['MiddleName'] = analysis['lex'].title()
-    if (len(name) == 3) or (len(name) == 2 and not name['MiddleName']):
+    if (len(name) == 3) or (len(name) == 2 and 'MiddleName' not in name):
         return True
     else:
         return False
