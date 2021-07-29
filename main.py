@@ -1,8 +1,10 @@
 import telebot
 import re
+from pymystem3 import Mystem
 import config
 import states
 import user
+
 
 bot = telebot.TeleBot(config.token)
 
@@ -40,6 +42,9 @@ def has_account(message):
     bot.send_message(message.from_user.id, reply)
 
 
+# Тут должна быть отправка сгенерированного кода
+
+
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Verify')
 def verify_account(message):
     if message.text == '123456':
@@ -59,27 +64,31 @@ def new_account(message):
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Name')
 def get_age(message):
-    reply = "Укажите дату вашего рождения в формате ДД.ММ.ГГГГ"
-    states.set_state(message.chat.id, 'Age')
+    if not user.full_name(message.text):
+        reply = "Напишите полностью ваши фамилию, имя и отчество (при наличии)."
+    else:
+        reply = "Укажите дату вашего рождения в формате ДД.ММ.ГГГГ"
+        states.set_state(message.chat.id, 'Age')
     bot.send_message(message.from_user.id, reply)
 
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Age')
-def has_account(message):
+def get_email(message):
     reply = "Пожалуйста, укажите ваш email."
     states.set_state(message.chat.id, 'Email')
     bot.send_message(message.from_user.id, reply)
 
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Email')
-def has_account(message):
+def check_data(message):
+    email = re.compile('[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}')
     reply = "Остался последний шаг! Подтвердите, пожалуйста, ваши данные."
     states.set_state(message.chat.id, 'Check')
     bot.send_message(message.from_user.id, reply)
 
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Check')
-def has_account(message):
+def finish(message):
     reply = "Поздравляем! Вы успешно зарегистированы."
     states.set_state(message.chat.id, 'Finish')
     bot.send_message(message.from_user.id, reply)
