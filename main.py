@@ -23,11 +23,11 @@ def first_question(message):
         user.add_info(phone, user_phone)
         # проверка на наличие аккаунта, привязанного к номеру телефона
         # если есть (подтягиваем данные):
-        reply = "На этот номер уже зарегистрирован аккаунт. Иванов Иван Иванович, это вы? /допустим, 123456/"
-        states.set_state(message.chat.id, 'HasAccount')
+        # reply = "На этот номер уже зарегистрирован аккаунт. Иванов Иван Иванович, это вы? /допустим, 123456/"
+        # states.set_state(message.chat.id, 'HasAccount')
         # если нет:
-        # reply = "У вас еще нет аккаунта. Но мы быстро это исправим! Пожалуйста, напишите ваши ФИО"
-        # states.set_state(message.chat.id, 'NewAccount')
+        reply = "У вас еще нет аккаунта. Но мы быстро это исправим! Пожалуйста, напишите ваши ФИО"
+        states.set_state(message.chat.id, 'NewAccount')
     else:
         reply = "Я не понимаю. Пожалуйста, напишите ваш номер телефона."
     bot.send_message(message.from_user.id, reply)
@@ -41,7 +41,7 @@ def has_account(message):
 
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Verify')
-def has_account(message):
+def verify_account(message):
     if message.text == '123456':
         reply = "Бинго :)"
         states.set_state(message.chat.id, 'AccountOwner')
@@ -51,23 +51,38 @@ def has_account(message):
 
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'NewAccount')
-def has_account(message):
+def new_account(message):
     reply = "У вас еще нет аккаунта. Но мы быстро это исправим! Пожалуйста, напишите ваши ФИО"
     states.set_state(message.chat.id, 'Name')
     bot.send_message(message.from_user.id, reply)
 
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Name')
-def has_account(message):
-    reply = "У вас еще нет аккаунта. Но мы быстро это исправим! Пожалуйста, напишите ваши ФИО"
+def get_age(message):
+    reply = "Укажите дату вашего рождения в формате ДД.ММ.ГГГГ"
     states.set_state(message.chat.id, 'Age')
     bot.send_message(message.from_user.id, reply)
 
 
 @bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Age')
 def has_account(message):
-    reply = "Укажите дату вашего рождения в формате ДД.ММ.ГГГГ"
+    reply = "Пожалуйста, укажите ваш email."
     states.set_state(message.chat.id, 'Email')
     bot.send_message(message.from_user.id, reply)
+
+
+@bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Email')
+def has_account(message):
+    reply = "Остался последний шаг! Подтвердите, пожалуйста, ваши данные."
+    states.set_state(message.chat.id, 'Check')
+    bot.send_message(message.from_user.id, reply)
+
+
+@bot.message_handler(func=lambda message: states.get_current_state(message.chat.id) == 'Check')
+def has_account(message):
+    reply = "Поздравляем! Вы успешно зарегистированы."
+    states.set_state(message.chat.id, 'Finish')
+    bot.send_message(message.from_user.id, reply)
+
 
 bot.polling()
